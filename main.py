@@ -1,3 +1,4 @@
+import random
 from abc import ABC, abstractmethod
 
 
@@ -59,17 +60,36 @@ class Animal:
         return f'Имя: {self.name}, Возвраст {self.age}, Характеристики: Сытость: {self.hunger}, Настроение: {self.mood}, Здоровье: {self.health}'
 
 
+    def random_numbers(self):
+        numbers = random.randint(1, 100)
+        if numbers <= 10:
+            return True
+        else:
+            return False
+
+
     def feed(self):
         print(f'Вы покормили с {self.name}')
-        self.hunger = self.age_strategy.apply_increase(self.hunger)
-        self.mood = self.age_strategy.apply_increase(self.mood)
-        self.health = self.age_strategy.apply_increase(self.health)
+        if self.random_numbers():
+            print(f'Внезапное событие. ВАШ {self.name} ОТРАВИЛСЯ!')
+            self.mood = self.age_strategy.apply_decrease(self.mood)
+            self.health = self.age_strategy.apply_decrease(self.health)
+        else:
+            self.hunger = self.age_strategy.apply_increase(self.hunger)
+            self.mood = self.age_strategy.apply_increase(self.mood)
+            self.health = self.age_strategy.apply_increase(self.health)
         self.info()
 
     def play(self):
-        self.hunger = self.age_strategy.apply_decrease(self.hunger)
-        self.mood = self.age_strategy.apply_increase(self.mood)
-        self.health = self.age_strategy.apply_increase(self.health)
+        print(f'Вы играете с {self.name}')
+        if self.random_numbers():
+            self.hunger = self.age_strategy.apply_decrease(self.hunger)
+            self.mood = self.age_strategy.apply_decrease(self.mood)
+            self.health = self.age_strategy.apply_decrease(self.health)
+        else:
+            self.hunger = self.age_strategy.apply_decrease(self.hunger)
+            self.mood = self.age_strategy.apply_increase(self.mood)
+            self.health = self.age_strategy.apply_increase(self.health)
         self.info()
 
     def heal(self):
@@ -80,19 +100,28 @@ class Animal:
 
     def info(self):
         return print(f'\nХарактеристики: {self.hunger}, {self.mood}, {self.health}')
+
+    @staticmethod
+    def check_statistics(animal):
+        if animal.hunger < 0  or animal.health < 0 or animal.mood < 0:
+            print('Животное погибло')
+            Main.animals.remove(animal)
+
+
 class Main:
     animals = []
 
     def run(self):
         while True:
-            print('Добро пожаловать в приложение. Пожалуйста создайте животное.')
-            self.add_animals()
+            print('Добро пожаловать в приложение.')
+            if not self.animals:
+                print('Прежде чем начать игать, пожалуйста создайте животное\n')
+                self.add_animals()
+            else:
+                for animal in self.animals:
+                    print(f'[1] Имя: {animal.name}, Возвраст {animal.age}')
+                choose_animal = int(input('\nВыберите животное из списка: ')) - 1
 
-            for animal in self.animals:
-                print(f'[1] Имя: {animal.name}, Возвраст {animal.age}')
-            choose_animal = int(input('Ваше животное добавлено:\nВыберите животное из списка: ')) - 1
-
-            if 0 <= choose_animal < len(self.animals):
                 choose = input('Какое действие вы хотите сделать?\n[1]Покормить животное\n[2]Поиграть с животным\n[3]Лечить животное')
                 id_animal = self.animals[choose_animal]
                 match choose:
@@ -103,12 +132,8 @@ class Main:
                     case '3':
                         id_animal.heal()
                     case '4':
-                        break
-            else:
-                print('Неккоректный ввод данных, попробуйте еще раз')
-                return
-
-
+                        self.add_animals()
+                Animal.check_statistics(id_animal)
 
     def add_animals(self):
         name = input('Введите имя: ')
@@ -120,6 +145,8 @@ class Main:
 
         animals = Animal(name, int(age))
         self.animals.append(animals)
+        print('Ваше животное добавлено:')
+        return self.run()
 
 
 if __name__ == '__main__':
